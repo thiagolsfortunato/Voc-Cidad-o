@@ -1,3 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">VoceCidadao</string>
+
+    <string name="app_name">FindAddressDemo</string>
+    <string name="title_activity_maps">Map</string>
+
 </resources>
