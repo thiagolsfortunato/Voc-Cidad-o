@@ -1,4 +1,4 @@
-package fatec.sp.gov.br.vocecidadao;
+package br.gov.sp.fatec.vocecidadao;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -38,6 +38,8 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+
+import fatec.sp.gov.br.vocecidadao.R;
 
 public class MapsActivity extends FragmentActivity {
 

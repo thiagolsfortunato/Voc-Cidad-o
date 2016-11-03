@@ -1,4 +1,4 @@
-package fatec.sp.gov.br.vocecidadao;
+package br.gov.sp.fatec.vocecidadao;
 
 import org.json.JSONArray;
 import org.json.JSONException;

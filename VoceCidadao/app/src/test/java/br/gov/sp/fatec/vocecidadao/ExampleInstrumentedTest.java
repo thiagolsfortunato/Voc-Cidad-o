@@ -1,4 +1,4 @@
-package fatec.sp.gov.br.vocecidadao;
+package br.gov.sp.fatec.vocecidadao;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
