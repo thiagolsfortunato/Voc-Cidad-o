@@ -131,7 +131,7 @@ public class MapsActivity extends FragmentActivity {
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Log.i("Blah","blah2");
+                Log.i("Blah","blah3");
 
                 AlertDialog.Builder alertDialog = new AlertDialog.Builder(MapsActivity.this);
                 alertDialog.setTitle("Nova Sugestão");
