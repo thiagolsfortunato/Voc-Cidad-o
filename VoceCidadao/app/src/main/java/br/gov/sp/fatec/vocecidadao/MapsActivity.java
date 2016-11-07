@@ -3,13 +3,19 @@ package br.gov.sp.fatec.vocecidadao;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.location.Address;
 import android.location.Geocoder;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -28,6 +34,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,14 +50,15 @@ import fatec.sp.gov.br.vocecidadao.R;
 
 public class MapsActivity extends FragmentActivity {
 
-    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-
+    private GoogleMap mMap;
+    private static final String TAG = "MainActivity";
+    private DisplayMetrics displayMetrics;
     EditText etAddress;
     ImageButton ibSearch;
     LatLng latLng;
     ProgressDialog progDailog;
     ProgressBar progressBar;
-
+    private final static int PHOTO = 2;
     Double latitude, longitude;
     MarkerOptions markerOptions;
 
@@ -63,6 +71,9 @@ public class MapsActivity extends FragmentActivity {
         etAddress = (EditText) findViewById(R.id.etAddress);
         ibSearch = (ImageButton) findViewById(R.id.btnSearch);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
+
+        displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
         ibSearch.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -98,9 +109,9 @@ public class MapsActivity extends FragmentActivity {
                     List<Address> addresses;
                     geocoder = new Geocoder(MapsActivity.this, Locale.getDefault());
 
-                    addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
+                    addresses = geocoder.getFromLocation(latitude, longitude, 1);
 
-                    String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+                    String address = addresses.get(0).getAddressLine(0);
                     String city = addresses.get(0).getLocality();
                     String state = addresses.get(0).getAdminArea();
                     String country = addresses.get(0).getCountryName();
@@ -136,10 +147,14 @@ public class MapsActivity extends FragmentActivity {
                 alertDialog.setPositiveButton("Enviar",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                Intent galleryIntent = new Intent(Intent.ACTION_VIEW, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                                startActivityForResult(Intent.createChooser(galleryIntent, "Select Picture"), Bundle.CONTENTS_FILE_DESCRIPTOR);
-
                                 String comentario = input.getText().toString();
+                                Intent intent = new Intent();
+                                intent.setType("image/*");
+                                intent.setAction(Intent.ACTION_GET_CONTENT);
+                                startActivityForResult(intent, PHOTO);
+                                //Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                               // startActivityForResult(takePictureIntent, 5678);
+
                             }
                         });
 
@@ -153,7 +168,46 @@ public class MapsActivity extends FragmentActivity {
                 return false;
             }
         });
+
+
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        Uri uri = data.getData();
+        ContentResolver contentResolver = this.getContentResolver();
+        try{
+            Bitmap bitmap = BitmapFactory.decodeStream(contentResolver.openInputStream(uri));
+            if(bitmap.getWidth()>bitmap.getHeight())
+                ScalePic(bitmap,displayMetrics.heightPixels);
+            else
+                ScalePic(bitmap,displayMetrics.widthPixels);
+        }catch (FileNotFoundException e){
+            Log.d(TAG,e.toString());
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void ScalePic(Bitmap bitmap,int phone) {
+        float mScale = 1;
+
+        if (bitmap.getWidth() > phone) {
+            mScale = (float) phone / (float) bitmap.getWidth();
+
+            Matrix mMat = new Matrix();
+            mMat.setScale(mScale, mScale);
+
+            Bitmap mScaleBitmap = Bitmap.createBitmap(bitmap,
+                    0,
+                    0,
+                    bitmap.getWidth(),
+                    bitmap.getHeight(),
+                    mMat,
+                    false);
+        }
+    }
+
 
     @Override
     protected void onResume() {
@@ -161,21 +215,7 @@ public class MapsActivity extends FragmentActivity {
         setUpMapIfNeeded();
     }
 
-    /**
-     * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
-     * installed) and the map has not already been instantiated.. This will ensure that we only ever
-     * call {@link #setUpMap()} once when {@link #mMap} is not null.
-     * <p/>
-     * If it isn't installed {@link SupportMapFragment} (and
-     * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
-     * install/update the Google Play services APK on their device.
-     * <p/>
-     * A user can return to this FragmentActivity after following the prompt and correctly
-     * installing/updating/enabling the Google Play services. Since the FragmentActivity may not
-     * have been completely destroyed during this process (it is likely that it would only be
-     * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
-     * method in {@link #onResume()} to guarantee that it will be called.
-     */
+
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
@@ -189,12 +229,6 @@ public class MapsActivity extends FragmentActivity {
         }
     }
 
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p/>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-     */
     private void setUpMap() {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
