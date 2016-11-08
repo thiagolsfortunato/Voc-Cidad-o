@@ -1,4 +1,4 @@
-package br.gov.sp.fatec.vocecidadao;
+package br.gov.sp.fatec.vocecidadao.activity;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -34,6 +35,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +48,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import br.gov.sp.fatec.vocecidadao.model.DetalheSugestao;
+import br.gov.sp.fatec.vocecidadao.util.GeocodeJSONParser;
 import fatec.sp.gov.br.vocecidadao.R;
 
 public class MapsActivity extends FragmentActivity {
@@ -61,6 +65,8 @@ public class MapsActivity extends FragmentActivity {
     private final static int PHOTO = 2;
     Double latitude, longitude;
     MarkerOptions markerOptions;
+    DetalheSugestao detalheSugestao;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +77,8 @@ public class MapsActivity extends FragmentActivity {
         etAddress = (EditText) findViewById(R.id.etAddress);
         ibSearch = (ImageButton) findViewById(R.id.btnSearch);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
+
+        detalheSugestao = new DetalheSugestao();
 
         displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -94,6 +102,9 @@ public class MapsActivity extends FragmentActivity {
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             public void onMapLongClick(LatLng latLng) {
                 mMap.clear();
+
+
+
                 latitude = latLng.latitude;
                 longitude = latLng.longitude;
 
@@ -120,6 +131,10 @@ public class MapsActivity extends FragmentActivity {
 
                     etAddress.setText(address + "\n" + city + "\n" + state + "\n" + country +
                             "\n" + postalCode + "\n" + knownName);
+
+                    detalheSugestao.setEndereco(address + "\n" + city + "\n" + state + "\n" + country +"\n" + postalCode + "\n" + knownName);
+                    detalheSugestao.setLatitude(latitude.toString());
+                    detalheSugestao.setLongitude(longitude.toString());
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -205,6 +220,13 @@ public class MapsActivity extends FragmentActivity {
                     bitmap.getHeight(),
                     mMat,
                     false);
+
+            //converting bitmap in Bae64 and set on the object
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+            byte[] byteArray = byteArrayOutputStream .toByteArray();
+            String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+            detalheSugestao.setImagem(encoded);;
         }
     }
 

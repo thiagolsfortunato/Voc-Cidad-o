@@ -1,7 +1,10 @@
 package gov.sp.fatec.vocecidadao.restapi;
 
+import static spark.Spark.get;
 import static spark.Spark.options;
 import static spark.Spark.post;
+
+import java.util.List;
 
 import com.google.gson.Gson;
 
@@ -43,6 +46,23 @@ public class Restapi {
 				return "ops, an error with inserting, check the fields!";
 			}
 		}, JsonUtil.json());
+		
+		get("/map/all", (req, res) -> {
+			List<DetalheSugestao> detalhes = null;
+			try{
+				detalhes = repository.todasSugestoes();
+				if(detalhes.size() > 0){
+					res.status(200);
+					return detalhes;
+				}else{
+					res.status(600);
+					return "FAIL";
+				}
+			}catch(NullPointerException e){
+				e.printStackTrace();
+				return "FAIL";
+			}
+		} , JsonUtil.json());
 		
 	}
 }
