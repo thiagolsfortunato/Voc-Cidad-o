@@ -1,5 +1,6 @@
 package gov.sp.fatec.vocecidadao.repository;
 
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import gov.sp.fatec.vocecidadao.entity.DetalheSugestao;
 
 public class SugestaoRepository {
 	
-	ObjectContainer sugestoes = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), "br/gov/sp/fatec/vocecidadao/banco/sugestoes.db4o");
+	ObjectContainer sugestoes = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), "banco/sugestoes.db4o");
 	
 
 	public ObjectContainer getClientes() {

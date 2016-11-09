@@ -49,8 +49,12 @@ import java.util.List;
 import java.util.Locale;
 
 import br.gov.sp.fatec.vocecidadao.model.DetalheSugestao;
+import br.gov.sp.fatec.vocecidadao.service.SugestaoService;
 import br.gov.sp.fatec.vocecidadao.util.GeocodeJSONParser;
 import fatec.sp.gov.br.vocecidadao.R;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MapsActivity extends FragmentActivity {
 
@@ -65,7 +69,7 @@ public class MapsActivity extends FragmentActivity {
     private final static int PHOTO = 2;
     Double latitude, longitude;
     MarkerOptions markerOptions;
-    DetalheSugestao detalheSugestao;
+    private final DetalheSugestao detalheSugestao  = new DetalheSugestao();
 
 
     @Override
@@ -78,7 +82,7 @@ public class MapsActivity extends FragmentActivity {
         ibSearch = (ImageButton) findViewById(R.id.btnSearch);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
-        detalheSugestao = new DetalheSugestao();
+
 
         displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -129,12 +133,6 @@ public class MapsActivity extends FragmentActivity {
                     String postalCode = addresses.get(0).getPostalCode();
                     String knownName = addresses.get(0).getFeatureName();
 
-                    etAddress.setText(address + "\n" + city + "\n" + state + "\n" + country +
-                            "\n" + postalCode + "\n" + knownName);
-
-                    detalheSugestao.setEndereco(address + "\n" + city + "\n" + state + "\n" + country +"\n" + postalCode + "\n" + knownName);
-                    detalheSugestao.setLatitude(latitude.toString());
-                    detalheSugestao.setLongitude(longitude.toString());
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -198,6 +196,15 @@ public class MapsActivity extends FragmentActivity {
                 ScalePic(bitmap,displayMetrics.heightPixels);
             else
                 ScalePic(bitmap,displayMetrics.widthPixels);
+
+            //converting bitmap in Bae64 and set on the object
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+            byte[] byteArray = byteArrayOutputStream .toByteArray();
+            String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+            detalheSugestao.setImagem(encoded);
+
+            sendData();
         }catch (FileNotFoundException e){
             Log.d(TAG,e.toString());
         }
@@ -221,15 +228,32 @@ public class MapsActivity extends FragmentActivity {
                     mMat,
                     false);
 
-            //converting bitmap in Bae64 and set on the object
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-            byte[] byteArray = byteArrayOutputStream .toByteArray();
-            String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-            detalheSugestao.setImagem(encoded);;
+
         }
     }
 
+    public void sendData(){
+
+
+        SugestaoService service = SugestaoService.retrofit.create(SugestaoService.class);
+        final Call<DetalheSugestao> call =
+                service.inserirSugestao(detalheSugestao);// repoContributors("square", "retrofit");
+
+        call.enqueue(
+                new Callback<DetalheSugestao>() {
+
+                    @Override
+                    public void onResponse(Call<DetalheSugestao> call, Response<DetalheSugestao> response) {
+                        Log.i("Sucess ",response.body().toString());
+                    }
+
+                    @Override
+                    public void onFailure(Call<DetalheSugestao> call, Throwable t) {
+                        Log.i("Something went wrong: ", t.getMessage());
+                    }
+                }
+        );
+    }
 
     @Override
     protected void onResume() {
@@ -411,6 +435,10 @@ public class MapsActivity extends FragmentActivity {
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12f));
         latitude = lati;
         longitude = longi;
+
+        detalheSugestao.setEndereco(name);
+        detalheSugestao.setLatitude(latitude.toString());
+        detalheSugestao.setLongitude(longitude.toString());
     }
 
     private void setProgress(final boolean bol) {

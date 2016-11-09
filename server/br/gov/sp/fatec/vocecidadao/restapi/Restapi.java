@@ -24,19 +24,16 @@ public class Restapi {
 		});
 		
 		
-		post("/map/sugestao/", (req, res) -> {
-			String competenceData = req.body();
+		post("/map/sugestao", (req, res) -> {
+			String body = req.body();
 			
-			byte ptext[] = competenceData.getBytes("ISO-8859-1"); 
-			String value = new String(ptext, "UTF-8"); 
-			
-			DetalheSugestao sugestao = gson.fromJson(value, DetalheSugestao.class);
+			DetalheSugestao sugestao = gson.fromJson(body, DetalheSugestao.class);
 			boolean operation = false;
 			try{
 				operation = repository.addSugestao(sugestao);
 				if(operation){
 					res.status(200);
-					return "SUCESS";
+					return sugestao;
 				}else{
 					res.status(600);
 					return "FAIL";
@@ -56,7 +53,7 @@ public class Restapi {
 					return detalhes;
 				}else{
 					res.status(600);
-					return "FAIL";
+					return "NOT FOUND";
 				}
 			}catch(NullPointerException e){
 				e.printStackTrace();
