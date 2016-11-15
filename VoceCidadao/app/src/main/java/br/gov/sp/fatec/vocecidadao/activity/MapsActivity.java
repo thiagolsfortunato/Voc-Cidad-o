@@ -88,11 +88,21 @@ public class MapsActivity extends FragmentActivity {
     private static final int PLACE_PICKER_FLAG = 1;
     private static final LatLngBounds BOUNDS_GREATER_SYDNEY = new LatLngBounds(
             new LatLng(-34.041458, 150.790100), new LatLng(-33.682247, 151.383362));
-
+    private AlertDialog alerta;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Bem vindo ao Você Cidadão. Digite o endereço do local que você gostaria de mudar.");
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface arg0, int arg1) {
+            }
+        });
+        alerta = builder.create();
+        alerta.show();
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Places.GEO_DATA_API)
                 .build();
@@ -111,9 +121,6 @@ public class MapsActivity extends FragmentActivity {
 
         displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-
-
-
 
         ibSearch.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -135,8 +142,6 @@ public class MapsActivity extends FragmentActivity {
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             public void onMapLongClick(LatLng latLng) {
                 mMap.clear();
-
-
 
                 latitude = latLng.latitude;
                 longitude = latLng.longitude;
@@ -176,7 +181,7 @@ public class MapsActivity extends FragmentActivity {
                 Log.i("Blah","blah3");
 
                 AlertDialog.Builder alertDialog = new AlertDialog.Builder(MapsActivity.this);
-                alertDialog.setTitle("Nova Sugestão");
+                alertDialog.setTitle("Digite sua sugestão");
 
                 final EditText input = new EditText(MapsActivity.this);
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
@@ -186,7 +191,7 @@ public class MapsActivity extends FragmentActivity {
                 alertDialog.setView(input);
                 //alertDialog.setIcon(R.drawable.key);
 
-                alertDialog.setPositiveButton("Enviar",
+                alertDialog.setPositiveButton("Prosseguir",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 String comentario = input.getText().toString();
@@ -194,9 +199,8 @@ public class MapsActivity extends FragmentActivity {
                                 intent.setType("image/*");
                                 intent.setAction(Intent.ACTION_GET_CONTENT);
                                 startActivityForResult(intent, PHOTO);
-                                //Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                               // startActivityForResult(takePictureIntent, 5678);
 
+                                Toast.makeText(MapsActivity.this, "Escolha uma foto do local.", Toast.LENGTH_SHORT).show();
                             }
                         });
 
@@ -256,32 +260,44 @@ public class MapsActivity extends FragmentActivity {
                     bitmap.getHeight(),
                     mMat,
                     false);
-
-
         }
     }
 
     public void sendData(){
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Deseja enviar sua sugestão?");
+        builder.setPositiveButton("Enviar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface arg0, int arg1) {
 
-        SugestaoService service = SugestaoService.retrofit.create(SugestaoService.class);
-        final Call<DetalheSugestao> call =
-                service.inserirSugestao(detalheSugestao);// repoContributors("square", "retrofit");
+                SugestaoService service = SugestaoService.retrofit.create(SugestaoService.class);
+                final Call<DetalheSugestao> call =
+                        service.inserirSugestao(detalheSugestao);// repoContributors("square", "retrofit");
+                call.enqueue(
+                        new Callback<DetalheSugestao>() {
 
-        call.enqueue(
-                new Callback<DetalheSugestao>() {
+                            @Override
+                            public void onResponse(Call<DetalheSugestao> call, Response<DetalheSugestao> response) {
+                                Log.i("Success ",response.body().toString());
+                                Toast.makeText(MapsActivity.this, "Sua sugestão foi envida com sucesso..", Toast.LENGTH_SHORT).show();
+                            }
 
-                    @Override
-                    public void onResponse(Call<DetalheSugestao> call, Response<DetalheSugestao> response) {
-                        Log.i("Sucess ",response.body().toString());
-                    }
-
-                    @Override
-                    public void onFailure(Call<DetalheSugestao> call, Throwable t) {
-                        Log.i("Something went wrong: ", t.getMessage());
-                    }
-                }
-        );
+                            @Override
+                            public void onFailure(Call<DetalheSugestao> call, Throwable t) {
+                                Log.i("Something went wrong: ", t.getMessage());
+                                Toast.makeText(MapsActivity.this, "Ops, aconteceu algo de errado. Tente novamente.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                );
+            }
+        });
+        builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                dialog.cancel();
+            }
+        });
+        alerta = builder.create();
+        alerta.show();
     }
 
     @Override
