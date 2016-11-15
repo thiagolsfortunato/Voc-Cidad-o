@@ -19,16 +19,26 @@ import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBuffer;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -48,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import br.gov.sp.fatec.vocecidadao.adapter.PlacesAutoCompleteAdapter;
 import br.gov.sp.fatec.vocecidadao.model.DetalheSugestao;
 import br.gov.sp.fatec.vocecidadao.service.SugestaoService;
 import br.gov.sp.fatec.vocecidadao.util.GeocodeJSONParser;
@@ -61,36 +72,54 @@ public class MapsActivity extends FragmentActivity {
     private GoogleMap mMap;
     private static final String TAG = "MainActivity";
     private DisplayMetrics displayMetrics;
-    EditText etAddress;
-    ImageButton ibSearch;
-    LatLng latLng;
-    ProgressDialog progDailog;
-    ProgressBar progressBar;
+    private ImageButton ibSearch;
+    private LatLng latLng;
+    private ProgressDialog progDailog;
+    private ProgressBar progressBar;
     private final static int PHOTO = 2;
-    Double latitude, longitude;
-    MarkerOptions markerOptions;
+    private Double latitude, longitude;
+    private MarkerOptions markerOptions;
     private final DetalheSugestao detalheSugestao  = new DetalheSugestao();
+
+    private AutoCompleteTextView myLocation;
+    private GoogleApiClient mGoogleApiClient;
+    private PlacePicker.IntentBuilder builder;
+    private PlacesAutoCompleteAdapter mPlacesAdapter;
+    private static final int PLACE_PICKER_FLAG = 1;
+    private static final LatLngBounds BOUNDS_GREATER_SYDNEY = new LatLngBounds(
+            new LatLng(-34.041458, 150.790100), new LatLng(-33.682247, 151.383362));
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Places.GEO_DATA_API)
+                .build();
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+       //builder = new PlacePicker.IntentBuilder();
+        myLocation = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextView1);
+        mPlacesAdapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1,
+                mGoogleApiClient, BOUNDS_GREATER_SYDNEY, null);
+        myLocation.setOnItemClickListener(mAutocompleteClickListener);
+        myLocation.setAdapter(mPlacesAdapter);
 
-        etAddress = (EditText) findViewById(R.id.etAddress);
+
         ibSearch = (ImageButton) findViewById(R.id.btnSearch);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-
-
 
         displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
+
+
+
         ibSearch.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                String location = etAddress.getText().toString();
+                String location = myLocation.getText().toString();
+                Log.i("Localizacao ",location);
 
                 if (location == null || location.equals("")) {
                     Toast.makeText(MapsActivity.this, "No place found",
@@ -261,6 +290,41 @@ public class MapsActivity extends FragmentActivity {
         setUpMapIfNeeded();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+    private AdapterView.OnItemClickListener mAutocompleteClickListener
+            = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            final PlacesAutoCompleteAdapter.PlaceAutocomplete item = mPlacesAdapter.getItem(position);
+            final String placeId = String.valueOf(item.placeId);
+            PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi
+                    .getPlaceById(mGoogleApiClient, placeId);
+            placeResult.setResultCallback(mUpdatePlaceDetailsCallback);
+        }
+    };
+    private ResultCallback<PlaceBuffer> mUpdatePlaceDetailsCallback
+            = new ResultCallback<PlaceBuffer>() {
+        @Override
+        public void onResult(PlaceBuffer places) {
+            if (!places.getStatus().isSuccess()) {
+                Log.e("place", "Place query did not complete. Error: " +
+                        places.getStatus().toString());
+                return;
+            }
+            // Selecting the first object buffer.
+            final Place place = places.get(0);
+        }
+    };
 
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
@@ -450,11 +514,11 @@ public class MapsActivity extends FragmentActivity {
                 if (bol) {
                     ibSearch.setVisibility(View.GONE);
                     progressBar.setVisibility(View.VISIBLE);
-                    etAddress.setEnabled(false);
+                    myLocation.setEnabled(false);
                 } else {
                     ibSearch.setVisibility(View.VISIBLE);
                     progressBar.setVisibility(View.GONE);
-                    etAddress.setEnabled(true);
+                    myLocation.setEnabled(true);
                 }
             }
         });

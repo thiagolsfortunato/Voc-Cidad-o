@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
+    android:layout_width="fill_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/capa">
@@ -14,17 +14,17 @@
         android:padding="2dp"
         android:weightSum="1">
 
-        <EditText
-            android:id="@+id/etAddress"
+        <AutoCompleteTextView
+            android:id="@+id/autoCompleteTextView1"
             android:layout_width="wrap_content"
-            android:layout_height="65dp"
-            android:gravity="left|center"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
             android:hint="Digite o endereço"
-            android:lines="4"
-            android:padding="10dp"
-            android:textSize="20dp"
-            android:layout_weight="1.03"
-            />
+            android:gravity="left|center"
+            android:ems="10"
+            android:inputType="textMultiLine"
+            android:layout_weight="0.96" />
 
 
         <ImageButton
@@ -46,6 +46,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone" />
+
+
 
 
     </LinearLayout>
