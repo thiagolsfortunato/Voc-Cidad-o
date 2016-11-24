@@ -3,8 +3,10 @@ package gov.sp.fatec.vocecidadao;
 import java.util.LinkedList;
 import java.util.List;
 
+import gov.sp.fatec.vocecidadao.config.CorsFilter;
 import gov.sp.fatec.vocecidadao.entity.DetalheSugestao;
 import gov.sp.fatec.vocecidadao.repository.SugestaoRepository;
+import gov.sp.fatec.vocecidadao.restapi.Restapi;
 
 public class App{
 

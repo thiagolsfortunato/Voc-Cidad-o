@@ -79,7 +79,7 @@ public class MapsActivity extends FragmentActivity {
     private final static int PHOTO = 2;
     private Double latitude, longitude;
     private MarkerOptions markerOptions;
-    private final DetalheSugestao detalheSugestao  = new DetalheSugestao();
+    private final DetalheSugestao detalheSugestao = new DetalheSugestao();
 
     private AutoCompleteTextView myLocation;
     private GoogleApiClient mGoogleApiClient;
@@ -108,7 +108,7 @@ public class MapsActivity extends FragmentActivity {
                 .build();
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
-       //builder = new PlacePicker.IntentBuilder();
+        //builder = new PlacePicker.IntentBuilder();
         myLocation = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextView1);
         mPlacesAdapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1,
                 mGoogleApiClient, BOUNDS_GREATER_SYDNEY, null);
@@ -126,7 +126,7 @@ public class MapsActivity extends FragmentActivity {
             public void onClick(View v) {
 
                 String location = myLocation.getText().toString();
-                Log.i("Localizacao ",location);
+                Log.i("Localizacao ", location);
 
                 if (location == null || location.equals("")) {
                     Toast.makeText(MapsActivity.this, "No place found",
@@ -138,6 +138,7 @@ public class MapsActivity extends FragmentActivity {
 
             }
         });
+
 
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             public void onMapLongClick(LatLng latLng) {
@@ -178,7 +179,7 @@ public class MapsActivity extends FragmentActivity {
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Log.i("Blah","blah3");
+                Log.i("Blah", "blah3");
 
                 AlertDialog.Builder alertDialog = new AlertDialog.Builder(MapsActivity.this);
                 alertDialog.setTitle("Digite sua sugestão");
@@ -214,7 +215,6 @@ public class MapsActivity extends FragmentActivity {
                 return false;
             }
         });
-
 
     }
 
@@ -356,7 +356,7 @@ public class MapsActivity extends FragmentActivity {
     }
 
     private void setUpMap() {
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+        mMap.addMarker(new MarkerOptions().position(new LatLng(-23.162611, -45.795177)).title("Fatec São José dos Campos"));
     }
 
     private void locationOnMap(String location) {
